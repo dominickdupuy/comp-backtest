@@ -1,0 +1,26 @@
+# Secrets
+.env
+.pgpass
+*.pgpass
+
+# Data cache (large; regenerated from WRDS)
+data_cache/
+*.parquet
+
+# Results
+results/*.html
+results/*.png
+results/*.csv
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db

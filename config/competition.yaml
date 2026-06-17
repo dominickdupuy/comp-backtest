@@ -1,0 +1,43 @@
+# =============================================================================
+# COMPETITION RULES  --  the structural parameters that define "success".
+# =============================================================================
+# A 2-month, pure-PnL, RANK-BASED trading competition. Variance is NOT
+# penalized, so the objective is raw terminal PnL / total return. Every value
+# here is consumed by the engine; nothing about the rules is hard-coded.
+# -----------------------------------------------------------------------------
+
+name: "2-Month Pure-PnL Equity Competition"
+
+# --- Scoring -----------------------------------------------------------------
+# Rank is determined by raw PnL over the contest window.
+scoring_metric: total_return        # what the leaderboard ranks on
+benchmark: SPY                      # comparison only (null to skip)
+risk_free_rate: 0.04               # annualized; for reported Sharpe/Sortino
+
+# --- Contest window ----------------------------------------------------------
+contest_length_days: 42            # ~2 trading months
+# For evaluation we run a long 3-year history (see backtest section), optionally
+# sliced into rolling contest_length_days "tournaments" to study rank outcomes.
+
+# --- Capital & accounting ----------------------------------------------------
+starting_capital: 1000000          # competition starting equity (USD)
+
+# --- Frictions (the decisive structural edge) --------------------------------
+commission_per_trade: 0.0          # ZERO transaction costs
+slippage_bps: 0.0                  # frictionless fills assumed by the rules
+# Data + execution arrive on a delay; harmless to multi-day horizons but we
+# enforce it to avoid lookahead.
+execution_delay_minutes: 20        # informational at daily granularity
+signal_lag_days: 1                 # trade on day T using info through close T-1
+
+# --- Position / leverage constraints -----------------------------------------
+allow_shorting: true               # long/short permitted
+max_gross_leverage: 2.0            # sum(|w|) cap
+max_net_leverage: 2.0              # sum(w) cap (set == gross to allow net-long)
+max_position_weight: 0.10          # 10% cap on any single name (entry cap)
+min_position_weight: 0.0           # drop sub-threshold names (0 = keep all)
+
+# --- Universe ----------------------------------------------------------------
+universe_size: 8000                # fixed ~8000-name US equity universe
+min_price: 1.0                     # exclude sub-$1 names (set 0 to disable)
+allow_etfs: true                   # QTUM-style ETFs / index products allowed
