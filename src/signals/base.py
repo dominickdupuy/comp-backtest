@@ -29,9 +29,12 @@ class DataBundle:
     open: pd.DataFrame | None = None          # daily open (for overnight)
     volume: pd.DataFrame | None = None
     market_cap: pd.DataFrame | None = None
-    sector: pd.Series | None = None           # ticker -> sector code
-    # PEAD inputs: long event table with columns [date, ticker, sue]
+    sector: pd.Series | None = None           # asset -> coarse sector bucket
+    siccd: pd.Series | None = None            # asset -> raw 4-digit SIC code
+    # PEAD inputs: long event table with columns [date, asset, sue]
     earnings: pd.DataFrame | None = None
+    # Short interest: wide (date x asset) shares-short / shrout (squeeze signal)
+    short_ratio: pd.DataFrame | None = None
     meta: dict[str, Any] = field(default_factory=dict)
 
     @property

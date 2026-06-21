@@ -1,0 +1,13 @@
+Loading library list...
+Done
+saved data_cache/compustat_quality.parquet: 27761 firm-years, 3927 names, 2015-01-31..2024-12-31 in 0.1 min
+gpa describe:
+count     27761.0
+mean     0.214233
+std      0.338093
+min     -9.696541
+25%      0.048669
+50%       0.20381
+75%      0.358182
+max      4.057391
+Name: gpa, dtype: Float64

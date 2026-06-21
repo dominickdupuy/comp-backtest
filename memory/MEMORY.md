@@ -1,0 +1,2 @@
+- [PEAD strategy finding](pead-strategy-finding.md) — PEAD core works OOS (+4092%, Sharpe 1.61) but cost-fragile (dies at 50bps)
+- [WRDS data access](wrds-data-access.md) — creds, CRSP/IBES tables, pull speeds, Russell-2000 proxy

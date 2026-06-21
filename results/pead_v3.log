@@ -1,0 +1,46 @@
+data 2017-01-03..2024-12-31  4000 names; delist events folded in: 1162 (mean dlret -7.3%)
+
+=== B. VALIDITY AUDITS ===
+  B.1 IBES PIT: consensus statpers<=anndats, actual=unadjusted actu_epsus,
+      entry at announcement+1 (held next bar). PASS (caveat: residual
+      restatement risk in IBES actuals not fully excludable).
+  B.2 Delisting returns: 1162 events folded in. PASS.
+  B.3 Universe PIT: monthly mktcap rank at month-start only. PASS
+      (caveat: 4000-name liquidity support pool chosen full-sample).
+  sanity: max entry weight 0.1000 (cap 0.1); long-only & gross<=1 asserted each day. PASS
+  base book WITH delisting (zero-drift): total 3997%  sharpe 1.57  vs v2 pre-delist +4092%
+
+=== A. REALISTIC-FILL HAIRCUT (k_adverse bps on traded notional) ===
+ k_adv    IS tot   OOS tot  OOS shrp  OOS>bench
+     0      897%      311%      1.24        yes
+    10      608%      137%      0.76        yes
+    25      323%        4%      0.04         NO
+    50       79%      -74%     -1.15         NO
+    75      -24%      -93%     -2.32         NO
+   100      -68%      -98%     -3.45         NO
+  (OOS EW benchmark = 16%); empirical small-cap 17.5-min drift ~ tens of bps -> expected-live near the 25-50 bps rows.
+
+=== C. TURNOVER HYSTERESIS (re-run A haircut at lower turnover) ===
+ K_exit  band  turn/d  OOS@0bps   OOS@25   OOS@50
+     12  0.00   22.2%      311%       4%     -74%
+     20  0.00    9.4%       57%     -12%     -50%
+     20  0.02    9.7%       43%     -21%     -57%
+     25  0.03    7.2%       48%      -3%     -36%
+     30  0.03    6.0%       77%      29%      -6%
+  chosen hysteresis (max OOS net@25bps): K_exit=30, band=0.03
+
+=== D. FACTOR ATTRIBUTION (Carhart 4-factor, daily) ===
+  IS 2017-2020: alpha   4.1%/yr (t= 0.6)  betas Mkt  1.02 SMB  1.01 HML  0.20 Mom  0.01
+  OOS 2021-2024: alpha  -1.4%/yr (t=-0.2)  betas Mkt  1.01 SMB  0.90 HML  0.36 Mom -0.07
+
+=== E. 2-MONTH (42d) WINDOW DISTRIBUTION + N-SWEEP (realistic fill @25bps) ===
+   N   median     5th    25th    75th     95th      max  P(>25%)
+   6     2.2%   -9.4%   -2.0%    6.3%    14.6%    31.7%     0.2%
+   8     3.0%  -12.9%   -2.8%    8.4%    17.9%    40.2%     0.8%
+  10     3.7%  -14.7%   -3.0%    9.2%    19.8%    48.2%     2.3%
+  12     3.1%  -14.7%   -3.5%    8.6%    18.9%    48.6%     1.8%
+  16     3.5%  -14.8%   -2.8%    9.5%    18.7%    47.7%     1.7%
+  chosen N (max P(2mo>25%) s.t. EV>0 after haircut): N=10  [EV 3.1%, 95th 20%, 5th -14.7%]
+  PEAD is ~uncorrelated with crowded momentum/meme field books -> occupies the right tail with low field correlation (report only).
+
+wrote results/pead_v3_summary.json + chosen-book returns

@@ -43,6 +43,8 @@ def run_intraday_reversal(
     delay_minutes: int = 20,
     delay_bars: int | None = None,
     exclude_overnight: bool = True,
+    skip_bars: int = 0,
+    spread_bps: float = 0.0,
     long_quantile: float = 0.2,
     short_quantile: float = 0.2,
     target_gross_leverage: float = 2.0,
@@ -63,8 +65,10 @@ def run_intraday_reversal(
     else:
         bar_ret = close.pct_change(fill_method=None)
 
-    # Trailing return as the reversal signal.
-    signal = -(close.pct_change(lookback_bars, fill_method=None))
+    # Trailing return as the reversal signal. `skip_bars` leaves a gap between
+    # the signal window and the fill so the position is NOT formed from the very
+    # bar whose last-trade bounce reverts next bar (the dominant fake-alpha source).
+    signal = -(close.shift(skip_bars).pct_change(lookback_bars, fill_method=None))
 
     # Cross-sectional long/short weights per bar.
     ranks = signal.rank(axis=1, pct=True)
@@ -87,6 +91,16 @@ def run_intraday_reversal(
     held = w.shift(delay_bars).fillna(0.0)
 
     port_ret = (held * bar_ret.reindex_like(held).fillna(0.0)).sum(axis=1)
+
+    # Effective half-spread on two-way turnover. "Zero commissions" does NOT
+    # mean fills at the last-trade price: you buy at the ask, sell at the bid.
+    # Even a 1-2 bps spread on the huge intraday turnover removes the bounce
+    # mirage. Set spread_bps=0 to reproduce the (unrealistic) last-trade fantasy.
+    if spread_bps:
+        prev = held.shift(1).fillna(0.0)
+        turn = 0.5 * (held - prev).abs().sum(axis=1)
+        port_ret = port_ret - (spread_bps / 1e4) * 2.0 * turn
+
     port_ret = port_ret.astype("float64").fillna(0.0)
 
     n_days = close.index.normalize().nunique()

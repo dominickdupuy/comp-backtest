@@ -200,11 +200,8 @@ def _panel_to_bundle(panel: pd.DataFrame, earnings: pd.DataFrame | None) -> Data
     # Fall back to pct_change where CRSP ret is missing.
     ret = ret.where(ret.notna(), close.pct_change(fill_method=None))
 
-    sector = (
-        panel.dropna(subset=["siccd"])
-        .groupby("permno")["siccd"].last()
-        .map(_sic_to_sector)
-    )
+    siccd = panel.dropna(subset=["siccd"]).groupby("permno")["siccd"].last()
+    sector = siccd.map(_sic_to_sector)
     names = panel.groupby("permno")["ticker"].last()
 
     return DataBundle(
@@ -214,6 +211,7 @@ def _panel_to_bundle(panel: pd.DataFrame, earnings: pd.DataFrame | None) -> Data
         volume=pivot("vol").sort_index(),
         market_cap=pivot("mktcap").sort_index(),
         sector=sector,
+        siccd=siccd,
         earnings=earnings,
         meta={"universe_size": close.shape[1], "names": names.to_dict()},
     )

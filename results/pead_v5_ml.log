@@ -1,0 +1,45 @@
+features: 19 -> ['mom_12_1', 'mom_6_1', 'rev_1m', 'hi52', 'ivol', 'max21', 'beta', 'logmcap', 'logdvol', 'amihud', 'logprice', 'sue', 'sue_x_mom', 'bm', 'sp', 'gpa', 'net_issue', 'asset_growth', 'month']
+train rows 321306  oos rows 352611
+  fit ElasticNet  IS_IC=0.064
+  fit LightGBM  IS_IC=0.373
+  fit XGBoost  IS_IC=0.314
+  fit RandomForest  IS_IC=0.259
+  fit CatBoost  IS_IC=0.227
+  gauntlet ElasticNet
+  gauntlet LightGBM
+  gauntlet XGBoost
+  gauntlet RandomForest
+  gauntlet CatBoost
+  gauntlet Ensemble
+
+============================================================================================================================================
+Model            Tgt   OOS IC(IR) OOStop ret   vsPEAD  alpha%/yr(t)  turn/d  2mo med   2mo95  2mo max  P>25%  P>40%  verdict
+--------------------------------------------------------------------------------------------------------------------------------------------
+EW universe        -            -        16%     -66%             -       -        -       -        -      -      -    bench
+PEAD baseline    SUE            -        82%       0%       7/yr(1.1)    6.3%     2.9%     19%      27%   0.4%   0.0% BASELINE
+ElasticNet        T1  0.112(0.83)         6%     -76%      -2/yr(-0.4)   18.8%     0.5%      5%       9%   0.0%   0.0%    worse
+LightGBM          T1  0.043(0.30)        18%     -64%       2/yr(0.3)   18.8%     0.5%     10%      17%   0.0%   0.0%    worse
+XGBoost           T1  0.044(0.31)        16%     -66%       2/yr(0.3)   18.8%     0.8%     10%      14%   0.0%   0.0%    worse
+RandomForest      T1  0.062(0.45)        14%     -68%       1/yr(0.3)   18.8%     0.4%      6%      10%   0.0%   0.0%    worse
+CatBoost          T1  0.052(0.31)        -6%     -87%      -3/yr(-0.6)   18.8%     0.5%      7%      10%   0.0%   0.0%    worse
+Ensemble          T1  0.053(0.34)        23%     -59%       3/yr(0.6)   18.8%     1.2%      6%       9%   0.0%   0.0%    worse
+LGBM-tail(T2)     T2-0.150(-0.76)        25%     -56%       5/yr(0.5)   18.8%     1.7%     16%      26%   0.3%   0.0%    worse
+
+IS vs OOS rank IC (overfit gap):
+  ElasticNet      IS_IC  0.064  OOS_IC  0.112  gap -0.048
+  LightGBM        IS_IC  0.373  OOS_IC  0.043  gap  0.330
+  XGBoost         IS_IC  0.314  OOS_IC  0.044  gap  0.270
+  RandomForest    IS_IC  0.259  OOS_IC  0.062  gap  0.196
+  CatBoost        IS_IC  0.227  OOS_IC  0.052  gap  0.175
+  Ensemble        IS_IC  0.308  OOS_IC  0.053  gap  0.255
+  LGBM-tail(T2)   IS_IC  0.068  OOS_IC -0.150  gap  0.217
+
+Top-5 features by importance:
+  ElasticNet      gpa, net_issue, rev_1m, logprice, logmcap
+  LightGBM        gpa, net_issue, asset_growth, sp, month
+  XGBoost         month, sp, ivol, gpa, logmcap
+  RandomForest    gpa, month, sp, ivol, logmcap
+  CatBoost        month, sp, gpa, ivol, net_issue
+  LGBM-tail(T2)   gpa, month, sp, asset_growth, net_issue
+
+wrote results/pead_v5_ml.json

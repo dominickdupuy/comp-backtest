@@ -1,0 +1,10 @@
+1 month(s) cached: ['2023-06']. Running experiment...
+Cached minute months: 2023-06 .. 2023-06 (1 months), 998 symbols
+
+Reversal sleeve: total PnL vs rebalance frequency (2023-06-01 .. 2023-06-30, zero costs, 20-min delay)
+------------------------------------------------------------------------
+frequency                   total_return    bars/day   delay(bars)
+1x/day (daily close)              0.23%         1.0             1
+~2x/day (130min)               1199.24%         4.0             1
+hourly (65min)                 1968.36%         7.0             1
+30-min (30min)             42372354.31%        13.2             1

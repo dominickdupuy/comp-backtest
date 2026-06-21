@@ -1,0 +1,19 @@
+=== B. GROSS-PROFITABILITY QUALITY CORE (signed fill) ===
+  (EW benchmark: full 125%, OOS 16%)
+  quality top-20             turn/d  1.1%  full    178%  OOS    -9%  shrp -0.08  alpha   -5%/yr t=-0.5
+  quality top-12             turn/d  1.2%  full    152%  OOS   -22%  shrp -0.17  alpha   -8%/yr t=-0.7
+
+=== C.1 SKEW SLEEVE + M&A BASE RATE ===
+  high-MAX skew top-12       turn/d  8.9%  full   -100%  OOS   -98%  shrp -1.02  alpha  -70%/yr t=-2.0
+  high-MAX sleeve 2mo EV -11.6% (Bali: negative-EV on avg -> skew only)
+  M&A: 928 merger-delistings, base rate 2.9%/yr, mean merger dlret +0.6% (61% positive)
+
+=== F. INTEGRATED BOOK (quality core + MAX skew, 50/50 blend) + D shaping ===
+   N  turn/d  2mo med     5th     95th      max  P(>25%)      EV
+   5    2.6%    -4.3%  -25.0%    23.5%   112.9%     4.7%   -2.4%
+   8    4.6%    -9.1%  -32.1%    31.4%    86.8%     8.0%   -6.1%
+  10    5.6%    -9.8%  -36.1%    27.6%    79.9%     6.0%   -8.1%
+  15    6.6%    -9.1%  -35.3%    31.3%    87.3%     6.9%   -6.9%
+  chosen N (max P(2mo>25%) s.t. EV>0): N=None
+
+wrote results/pead_v4_quality.json

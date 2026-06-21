@@ -1,1 +1,22 @@
 Pulling minute bars: 998 symbols, 2023-06-18 -> 2026-06-17
+Loading library list...
+Done
+[taq] 2023-06 pulled (3371440 rows)
+[1/37] 2023-06 done in 7.8 min (elapsed 7.8 min)
+Loading library list...
+Done
+[taq] 2023-07 pulled (7330704 rows)
+[2/37] 2023-07 done in 18.8 min (elapsed 26.6 min)
+Loading library list...
+Done
+[taq] skip 2023-08-25 ((psycopg2.OperationalError) server closed the connection une)
+[taq] skip 2023-08-28 (Can't reconnect until invalid transaction is rolled back.  P)
+[taq] skip 2023-08-29 (Can't reconnect until invalid transaction is rolled back.  P)
+[taq] skip 2023-08-30 (Can't reconnect until invalid transaction is rolled back.  P)
+[taq] skip 2023-08-31 (Can't reconnect until invalid transaction is rolled back.  P)
+[taq] 2023-08 pulled (6700182 rows)
+[3/37] 2023-08 done in 138.7 min (elapsed 165.3 min)
+Loading library list...
+Done
+[taq] 2023-09 pulled (7444557 rows)
+[4/37] 2023-09 done in 17.6 min (elapsed 182.9 min)

@@ -49,38 +49,47 @@ def main():
 
     gl = comp["max_gross_leverage"]
     cap = comp["max_position_weight"]
-    rows = []
 
-    # Once-daily baseline (close-to-close, 1-day lag) on the SAME names/window.
+    # Three fill-realism regimes, to separate real alpha from the bounce mirage:
+    #   naive    : last-trade fills, no skip, no spread (the fantasy)
+    #   skip     : 1-bar gap so the position isn't formed from the bounce bar
+    #   realistic: 1-bar gap + a small effective half-spread (you cross the book)
+    regimes = {
+        "naive (last-trade)": dict(skip_bars=0, spread_bps=0.0),
+        "skip 1 bar":         dict(skip_bars=1, spread_bps=0.0),
+        "skip + 2bps spread": dict(skip_bars=1, spread_bps=2.0),
+    }
+
     daily_close = data.close.rename(columns=data.meta["names"])
     daily_close = daily_close.loc[
         (daily_close.index.date >= win_start) & (daily_close.index.date <= win_end),
         [s for s in symbols if s in daily_close.columns],
     ]
-    base = run_intraday_reversal(
-        daily_close, exclude_overnight=False, delay_bars=1, lookback_bars=1,
-        target_gross_leverage=gl, max_position_weight=cap)
-    rows.append(("1x/day (daily close)", base.total_return, base.bars_per_day,
-                 base.delay_bars))
-
-    # Intraday frequencies.
+    panels = {"1x/day (daily)": daily_close}
     for freq in ["130min", "65min", "30min"]:
-        close = load_cached_minute(symbols, win_start, win_end, field="close", freq=freq)
-        if close.empty:
-            continue
-        res = run_intraday_reversal(
-            close, rebalance_freq=freq, lookback_bars=1, delay_minutes=20,
-            target_gross_leverage=gl, max_position_weight=cap)
-        label = {"130min": "~2x/day", "65min": "hourly", "30min": "30-min"}[freq]
-        rows.append((f"{label} ({freq})", res.total_return, res.bars_per_day,
-                     res.delay_bars))
+        p = load_cached_minute(symbols, win_start, win_end, field="close", freq=freq)
+        if not p.empty:
+            label = {"130min": "~2x/day", "65min": "hourly", "30min": "30-min"}[freq]
+            panels[f"{label} ({freq})"] = p
 
-    print("\nReversal sleeve: total PnL vs rebalance frequency "
-          f"({win_start} .. {win_end}, zero costs, 20-min delay)")
-    print("-" * 72)
-    print(f"{'frequency':<24}{'total_return':>16}{'bars/day':>12}{'delay(bars)':>14}")
-    for label, tr, bpd, db in rows:
-        print(f"{label:<24}{tr:>15.2%}{bpd:>12.1f}{db:>14d}")
+    print("\nReversal sleeve total PnL: rebalance frequency x fill realism")
+    print(f"({win_start} .. {win_end}, zero commissions, 20-min delay)")
+    print("-" * 78)
+    header = f"{'frequency':<20}" + "".join(f"{r:>19}" for r in regimes)
+    print(header)
+    for label, panel in panels.items():
+        is_daily = label.startswith("1x")
+        freq = "1D" if is_daily else label.split("(")[1].rstrip(")")
+        cells = []
+        for reg in regimes.values():
+            res = run_intraday_reversal(
+                panel, rebalance_freq=freq, lookback_bars=1, delay_minutes=20,
+                delay_bars=1 if is_daily else None,
+                exclude_overnight=not is_daily,
+                target_gross_leverage=gl, max_position_weight=cap, **reg)
+            tr = res.total_return
+            cells.append(f"{tr:>18.1%}" if abs(tr) < 100 else f"{tr:>18.2e}")
+        print(f"{label:<20}" + "".join(f"{c:>19}" for c in cells))
 
 
 if __name__ == "__main__":
