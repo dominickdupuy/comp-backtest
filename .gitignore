@@ -3,9 +3,10 @@
 .pgpass
 *.pgpass
 
-# Data cache (large; regenerated from WRDS)
-data_cache/
+# Data cache (large; regenerated from WRDS, tracked via Git LFS)
 *.parquet
+!data_cache/
+!data_cache/*.parquet
 
 # Results
 results/*.html
