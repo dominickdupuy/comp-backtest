@@ -1,100 +1,60 @@
-# comp-backtest
+# comp-backtest — Illiquid Bucket-5 PEAD
 
-A config-driven backtesting environment for a **2-month, pure-PnL, rank-based
-equity trading competition**, scored on **total return**. Built to test a
-blended multi-anomaly long/short book under the competition's exact rules and
-to run a 3-year historical backtest on UPenn **WRDS** data.
+A single, self-contained equity strategy for a **2-month, pure-PnL, rank-based trading
+competition** (76-player winner-take-all; long-only; no leverage; 10% per-name cap; zero
+transaction cost; full fills at a reference price ~15-20 min after the order).
 
-## The competition rules (baked in)
+## The strategy
 
-All rules live in [`config/competition.yaml`](config/competition.yaml) — nothing
-is hard-coded in the engine:
+**Post-earnings-announcement drift (PEAD), tilted to the most-illiquid names.** The
+competition's no-impact / full-fill rule is worth the most exactly where real-world costs
+are highest — the illiquid tail — so the book concentrates there.
 
-| Rule | Value | Why it matters |
-|------|-------|----------------|
-| Scoring | **total return** (rank-based) | Variance is *not* penalized → over-bet (super-Kelly) |
-| Horizon | ~2 months (`contest_length_days`) | Short sprint; tournament theory applies |
-| Transaction costs | **zero** | Free turnover; resurrects illiquid/microcap alpha |
-| Data + execution delay | 15–20 min | Kills sub-20-min alpha; multi-day signals intact |
-| Max gross leverage | **2.0×** | Push to the cap |
-| Max per-name weight | **10%** | Concentrate near the cap |
-| Shorting | allowed | Long/short, dollar-neutral by default |
-| Universe | ~8,000 US equities | Liquidity-ranked from CRSP common shares |
+| Component | Choice |
+|---|---|
+| Universe | US common stock, mktcap rank 1001-3000 (Russell-2000 definition), monthly point-in-time |
+| Signal | IBES-style standardized earnings surprise (SUE), enter the close after the announcement (rdq+1), hold ~40 days |
+| Liquidity tilt | bucket-5 = most-illiquid Amihud quintile (recomputed monthly) |
+| Sizing | top **N=25**, signal-proportional, **10% entry cap**, appreciation-lock, ~98% invested |
+| Returns | bid-ask **midpoint** (bounce-free), delisting returns folded in, decision→fill signed slippage charged |
+| Direction | long-only, no leverage |
 
-## Strategy book
+## Backtest results (2017-2024)
 
-[`config/strategies.yaml`](config/strategies.yaml) blends delay-robust,
-cost-sensitive anomalies into one cross-sectional score, then constructs a
-long/short book:
+| | value |
+|---|---|
+| Cumulative (full period) | **+11,116%** |
+| OOS 2021-2024 | +955%, Carhart alpha 57%/yr (t=5.1) |
+| Sharpe / Vol / Max DD | 1.43 / 44% / −46% |
+| Best / worst year | +288% (2020) / −1.5% (2022) |
 
-- **PEAD** (post-earnings drift) — primary; SUE from IBES, small-cap tilt
-- **Cross-sectional momentum** — 6-mo formation, skip 1 mo, long-biased
-- **Short-term reversal / stat-arb** — multi-day, sector-neutralized
-- **Overnight overlay** — trailing overnight-return tilt (delay-immune)
-- **Time-series momentum** and **betting-against-beta** (optional sleeves)
+Per-year returns: 2017 +50%, 2018 +13%, 2019 +62%, 2020 +288%, 2021 +72%, 2022 −1.5%,
+2023 +121%, 2024 +182%.
 
-Sizing follows tournament theory (Browne; Brown-Harlow-Starks; Dubins-Savage):
-super-Kelly gross to the 2× cap, concentrate into the highest-conviction names,
-escalate when behind in the final weeks.
-
-## Layout
-
-```
-config/            competition.yaml, strategies.yaml   (all rules & params)
-src/
-  config.py        load + validate config, resolve backtest window
-  data/
-    wrds_loader.py CRSP daily + IBES SUE -> wide panels, parquet-cached
-    taq_loader.py  TAQ millisecond -> 1-min OHLCV bars (relevant subset)
-    relevance.py   pick the traded / liquid cross-section for minute pulls
-    cache.py       parquet cache
-  signals/         pead, momentum, reversal, overnight, bab  (+ base/registry)
-  portfolio/       construction (blend->L/S weights), sizing (super-Kelly)
-  backtest/
-    engine.py      signals->constraints->lag->daily PnL->equity
-    constraints.py 2x gross, 10% cap, shorting toggle
-    costs.py       parameterized (zero by default)
-    intraday.py    intraday reversal engine (frequency experiment)
-    execution.py   20-min delayed-fill pricing from minute bars
-  report/          metrics + matplotlib/quantstats tearsheet
-tests/             synthetic data + engine/constraint unit tests
-scripts/           pull_daily, pull_minute, run_intraday_experiment
-run_backtest.py    CLI
-```
-
-## Setup
-
-```bash
-python -m venv .venv && .venv/Scripts/python -m pip install -r requirements.txt
-cp .env.example .env        # add WRDS_USERNAME / WRDS_PASSWORD
-```
+> **Honest live expectation:** the contest is ~6 weeks, shorter than the 40-day drift, so
+> the deployable expectation is the seasonal proxy — **~+10% median over the window, ~+28%
+> historical max, never >+40% in 8 years.** The win path is a small-cap melt-up (~1:1 IWM
+> beta) amplifying a strong Q2 earnings-season alpha. See `DEPLOYMENT_RUNBOOK.md`.
 
 ## Usage
 
 ```bash
-# Validate the engine with no WRDS access (synthetic data):
-python run_backtest.py --synthetic
+python -m venv .venv && .venv/Scripts/python -m pip install -r requirements.txt
 
-# Real 3-year backtest from WRDS (parquet-cached after first pull):
-python run_backtest.py
-
-# Pull daily universe / minute bars explicitly:
-python scripts/pull_daily.py
-python scripts/pull_minute.py --top 1000
-
-# Frequency experiment: does more rebalancing add PnL at zero cost?
-python scripts/run_intraday_experiment.py --top 1000
+python pead_strategy.py                 # per-year returns + summary
+python pead_strategy.py --tearsheet     # also write results/pead_tearsheet.html
+python scripts/run_regime.py            # live IWM trend / small-cap breadth read
 ```
 
-Results (equity curve, drawdown, metrics, HTML tearsheet) land in `results/`.
+## Layout
 
-## Data frequency: why daily is primary, minute is targeted
+```
+pead_strategy.py        the entire strategy: data -> signal -> buckets -> book -> report
+scripts/run_regime.py   live small-cap regime read (IWM trend + breadth), runbook input
+DEPLOYMENT_RUNBOOK.md   operational daily loop, desert/day-1 ramp, undeployed-capital toggle
+data_cache/*.parquet    price/SUE/delisting/factor panels (tracked via Git LFS)
+results/                derived artifacts (per-day returns CSV, QuantStats tearsheet)
+memory/                 strategy record
+```
 
-The winning strategies are **multi-day horizon**, so daily CRSP (plus open/close
-for the overnight overlay) is the correct signal granularity — the 15–20 min
-delay makes sub-daily *signal* worthless. Minute bars (from TAQ, aggregated
-server-side — **not** tick) are pulled only for the **liquid cross-section** to
-(a) precisely price the delayed fill and (b) test whether higher-frequency
-rebalancing adds PnL now that **zero costs make turnover free**. See
-`scripts/run_intraday_experiment.py`. Tick data is deliberately avoided:
-infeasible at universe scale and counterproductive given the delay.
+Data panels are cached as parquet and tracked via Git LFS.

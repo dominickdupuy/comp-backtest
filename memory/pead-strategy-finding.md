@@ -187,5 +187,6 @@ engine (10%-cap-limited). Strategy is fundamentally a small-cap-melt-up bet. Cav
 illiquid edge is impact-fragile live but capturable under the sim's zero-impact rule.
 
 Data/code: `data_cache/pead_crsp_daily.parquet`, `pead_ibes_sue.parquet`,
-`pead_delist.parquet`, `ff_factors_daily.parquet`; `scripts/run_pead_walkforward.py`,
-`scripts/run_pead_v3.py`, `scripts/pull_pead_history.py`. Related: [[wrds-data-access]].
+`pead_delist.parquet`, `ff_factors_daily.parquet`; the whole strategy is consolidated,
+self-contained, in `pead_strategy.py` (per-year returns + QuantStats tearsheet); operational
+loop in `DEPLOYMENT_RUNBOOK.md`; live regime read in `scripts/run_regime.py`.
